@@ -1,15 +1,20 @@
 import {Request, Response} from "express";
 import Boom from '@hapi/boom'
 import { User } from './user.types'
+import { UserService } from "./user.service";
 
 export class UserController {
     private users: User[];
-    constructor() {
+
+    private userService: UserService;
+    constructor(userService: UserService) {
         this.users = [];
+        this.userService = userService;
     }
 
     getUsers = (req: Request, res: Response) => {
-        return res.json(this.users)
+        const users =  this.userService.getUsers();
+        return res.json(users)
     }
 
     createUser = (req: Request, res: Response) => {
@@ -23,18 +28,18 @@ export class UserController {
             throw Boom.badRequest("Email is required")
         }
 
-        const newUser : User = {
-            id: new Date().getTime().toString(),
+        const user = this.userService.createUser({
             name,
             email
-        }
+        })
 
-        this.users.push(newUser);
-
-        return res.json(newUser);
+        return res.json(user);
     }
 
     deleteUser = (req: Request, res: Response) => {
-        return res.send('Delete users');
+        const { id } = req.params;
+        this.userService.deleteUser(String(id));
+
+        return res.send('User deleted');
     }
 }
